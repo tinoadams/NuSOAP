@@ -96,14 +96,14 @@ class nusoap_base {
 	 * @var string
 	 * @access private
 	 */
-	var $version = '0.9.5';
+	var $version = '0.9.6';
 	/**
 	 * CVS revision for HTTP headers.
 	 *
 	 * @var string
 	 * @access private
 	 */
-	var $revision = '$Revision: 1.56 $';
+	var $revision = '$Revision: 1.57 $';
     /**
      * Current error string (manipulated by getError/setError)
 	 *
