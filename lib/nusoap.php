@@ -7313,7 +7313,7 @@ class nusoap_client extends nusoap_base  {
 	* @param	mixed $headers optional string of XML with SOAP header content, or array of soapval objects for SOAP headers, or associative array
 	* @param	boolean $rpcParams optional (no longer used)
 	* @param	string	$style optional (rpc|document) the style to use when serializing parameters (WSDL can override)
-	* @param	string	$use optional (encoded|literal) the use when serializing parameters (WSDL can override)
+	* @param	string	$use optional (encoded|literal|literal wrapped) the use when serializing parameters (WSDL can override)
 	* @return	mixed	response from SOAP call, normally an associative array mirroring the structure of the XML response, false for certain fatal errors
 	* @access   public
 	*/
@@ -7400,6 +7400,15 @@ class nusoap_client extends nusoap_base  {
 			$nsPrefix = 'ns' . rand(1000, 9999);
 			// serialize 
 			$payload = '';
+			if ($use = 'literal wrapped') {
+			// 'literal wrapped' is only sensible (and defined) for 'document'.
+				if ($style == 'document') {
+					$usewrapped = TRUE;
+				}
+				// For compatibility with the rest of the code:
+				$use = 'literal';
+			}
+
 			if (is_string($params)) {
 				$this->debug("serializing param string for operation $operation");
 				$payload = $params;
@@ -7418,6 +7427,18 @@ class nusoap_client extends nusoap_base  {
 				$encodingStyle = 'http://schemas.xmlsoap.org/soap/encoding/';
 			} else {
 				$encodingStyle = '';
+			}
+		}
+		// wrap document/literal wrapped calls with operation element
+		if (!empty($usewrapped)) {
+			// (This code block was based on http://www.ibm.com/developerworks/webservices/library/ws-whichwsdl/
+			// and tailored to the needs of one specific SOAP server, where no nsPrefix was seen...
+			$this->debug("wrapping document request with literal method element");
+			if ($namespace) {
+				$payload = "<$operation xmlns=\"$namespace\">" .
+					$payload . "</$operation>";
+			} else {
+				$payload = "<$operation>" . $payload . "</$operation>";
 			}
 		}
 		// wrap RPC calls with method element
